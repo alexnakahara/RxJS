@@ -11,39 +11,43 @@
   const { Observable } = rxjs;
   const { share }= rxjs.operators;
 
-  const promise = new Promise(resolve => {
-    console.log('Iniciando a promise');
-    
-    setTimeout(() => resolve(1), 3000);
-  })
-
-  const observer = Observable.create(observer => {
+  const observer1 = Observable.create(observer => {
     console.log('Iniciando o observable');
+    let i = 1;
+    const interval = setInterval(() => observer.next(i++) , 1000);
 
-    let i = 0;
-    const interval = setInterval(() => {
-      console.log('aki ', i);
-      
-      observer.next(i++)
-    }, 1000);
+    setTimeout(() => observer.complete() , 5000);
 
     return () => clearInterval(interval);
-
   });
 
-  promise.then(n => console.log('Promise', n));
-  const subscriber = observer.subscribe(num => console.log('Observable', num));
+  const observer2 = Observable.create(observer => {
+    console.log('Iniciando o observable');
+    let i = 1;
+    const interval = setInterval(() => observer.next(i++) , 1300);
 
-  setTimeout(() => {
-    subscriber.unsubscribe();
-    console.log('Parei');
+    setTimeout(() => observer.complete() , 5000);
+
+    return () => clearInterval(interval);
+  });
+
+  const subscription1 = observer1.subscribe(
+    num => console.log('Observable 1 ', num),
+    err => console.error(err),
+    () => console.log('Completado')
+    );
     
-  },5000);
+  const subscription2 = observer2.subscribe(
+    num => console.log('Observable 2 ', num),
+    err => console.error(err),
+    () => console.log('Completado')
+    );
+    
+    subscription1.add(subscription2); // quando se desinscreve ele tira os dois
+    subscription1.remove(subscription2); // para tirar da cadeia de inscrição
 
-  // setTimeout(() => {
-  //   promise.then(n => console.log('Promise', n));
-  //   observer.subscribe(num => console.log('Observable', num));
-  // }, 2000);
+    setTimeout(()=> subscription1.unsubscribe(), 3000);
+
 
 </script>  
 </body>

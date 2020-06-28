@@ -16,24 +16,34 @@
     
     setTimeout(() => resolve(1), 3000);
   })
-  // .then(num => console.log('Promise ', num));
 
   const observer = Observable.create(observer => {
     console.log('Iniciando o observable');
-    
-    setTimeout(() => observer.next(1), 3000);
 
-  }).pipe(share())// comportilhando o estado
+    let i = 0;
+    const interval = setInterval(() => {
+      console.log('aki ', i);
+      
+      observer.next(i++)
+    }, 1000);
 
-  // .subscribe(num => console.log('Observable', num));
+    return () => clearInterval(interval);
+
+  });
 
   promise.then(n => console.log('Promise', n));
-  observer.subscribe(num => console.log('Observable', num));
+  const subscriber = observer.subscribe(num => console.log('Observable', num));
 
   setTimeout(() => {
-    promise.then(n => console.log('Promise', n));
-    observer.subscribe(num => console.log('Observable', num));
-  }, 2000);
+    subscriber.unsubscribe();
+    console.log('Parei');
+    
+  },5000);
+
+  // setTimeout(() => {
+  //   promise.then(n => console.log('Promise', n));
+  //   observer.subscribe(num => console.log('Observable', num));
+  // }, 2000);
 
 </script>  
 </body>

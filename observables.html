@@ -23,7 +23,7 @@
     
     setTimeout(() => observer.next(1), 3000);
 
-  })//.pipe(share())// comportilhando o estado
+  }).pipe(share())// comportilhando o estado
 
   // .subscribe(num => console.log('Observable', num));
 

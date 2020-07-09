@@ -7,7 +7,7 @@
   <script src="https://unpkg.com/@reactivex/rxjs@6.3.3/dist/global/rxjs.umd.js"></script>
 </head>
 <body>
-<script>
+<!-- <script>
   const { Observable } = rxjs;
   const { share }= rxjs.operators;
 
@@ -45,6 +45,44 @@
     
     subscription1.add(subscription2); // quando se desinscreve ele tira os dois
     subscription1.remove(subscription2); // para tirar da cadeia de inscrição
+
+    setTimeout(()=> subscription1.unsubscribe(), 3000);
+
+    
+</script>   -->
+
+<script>
+
+  // Tipo especial de observable 
+  //Subjects sempre vão ser multicasts(Estado compartilhado)
+
+  const { Subject } = rxjs;
+  const { share }= rxjs.operators;
+
+  
+  const sub = new Subject();
+
+  const subscription1 = sub.subscribe(
+    num => console.log('Observable 1 ', num),
+    err => console.error(err),
+    () => console.log('Completado')
+    );
+    
+  const subscription2 = sub.subscribe(
+    num => console.log('Observable 2 ', num),
+    err => console.error(err),
+    () => console.log('Completado')
+    );
+
+  sub.next(1);
+  sub.next(2);
+  sub.next(3);
+  sub.next(4);
+  sub.next('james');
+  sub.error(new Error('teste erroooo'))
+    
+  subscription1.add(subscription2); // quando se desinscreve ele tira os dois
+  subscription1.remove(subscription2); // para tirar da cadeia de inscrição
 
     setTimeout(()=> subscription1.unsubscribe(), 3000);
 

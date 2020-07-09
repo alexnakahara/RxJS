@@ -56,9 +56,9 @@
   // Tipo especial de observable 
   //Subjects sempre vão ser multicasts(Estado compartilhado)
 
-  const { BehaviorSubject, Observable } = rxjs;
+  const { ReplaySubject, Observable } = rxjs;
   
-  const sub = new BehaviorSubject(0);
+  const sub = new ReplaySubject(4, 500);
 
   sub.next(1);
   sub.next(2);
@@ -74,13 +74,14 @@
 
     sub.next(5);
     sub.next(6);
-    
-  sub.subscribe(
-    num => console.log('Observable 2 ', num),
+
+  setTimeout(() => {
+    sub.subscribe(
+    num => console.log('Observable 2', num),
     err => console.error(err),
     () => console.log('Completado')
     );
-
+  }, 500)
     
  
 </script>  

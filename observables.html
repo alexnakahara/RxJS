@@ -56,9 +56,9 @@
   // Tipo especial de observable 
   //Subjects sempre vão ser multicasts(Estado compartilhado)
 
-  const { ReplaySubject, Observable } = rxjs;
+  const { AsyncSubject, Observable } = rxjs;
   
-  const sub = new ReplaySubject(4, 500);
+  const sub = new AsyncSubject();
 
   sub.next(1);
   sub.next(2);
@@ -81,7 +81,9 @@
     err => console.error(err),
     () => console.log('Completado')
     );
-  }, 500)
+  }, 500);
+
+  sub.complete();
     
  
 </script>  

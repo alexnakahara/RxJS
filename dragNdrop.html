@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://unpkg.com/@reactivex/rxjs@6.3.3/dist/global/rxjs.umd.js"></script>
+  <style>
+    .card {
+      height: 300px;
+      width: 300px;
+      background: #666;
+      cursor: move;
+      position: absolute;
+      box-shadow: #333 1px 1px 25px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card"> </div>
+
+  <script>
+    const { fromEvent, merge } = rxjs;
+    const { switchMap, takeUntil, map, delay, filter, tap, skip } = rxjs.operators;
+
+
+    const card = document.querySelector('.card');
+
+    const mouseDown$ = fromEvent(card, 'mousedown');
+    const mouseUp$ = fromEvent(document, 'mouseup');
+    const mouseMove$ = fromEvent(document, 'mousemove');
+
+    const keyUp$ = fromEvent(document, 'keyup');
+
+    const dragAndDrop$ = mouseDown$.pipe(
+      map(ev => ({
+        x: ev.clientX,
+        y: ev.clientY,
+        target : {
+          x: ev.target.offsetLeft,
+          y: ev.target.offsetTop,
+        }
+      })),
+      switchMap(start => merge(
+        mouseMove$.pipe(
+        map(ev => ({
+          x: ev.clientX - start.x + start.target.x,
+          y: ev.clientY - start.y + start.target.y
+        })),
+        takeUntil(mouseUp$)
+      ),
+        keyUp$.pipe(
+          filter(e => e.which === 32 ),
+          tap(tecla => {
+            document.body.insertBefore(card.cloneNode(true), card)
+          }), // execute an effect, toke value and return effect
+          skip() // ignore emissions by stream
+          )
+        )
+      )
+    );
+
+    dragAndDrop$.pipe(
+      delay(250)
+    ).subscribe(val => {
+      card.style.top = `${val.y}px`;
+      card.style.left= `${val.x}px`;
+    })
+
+  </script>
+</body>
+</html>

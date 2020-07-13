@@ -7,6 +7,7 @@
   <script src="https://unpkg.com/@reactivex/rxjs@6.3.3/dist/global/rxjs.umd.js"></script>
 </head>
 <body>
+  <button>Click</button>
 <!-- <script>
   const { Observable } = rxjs;
   const { share }= rxjs.operators;
@@ -51,7 +52,7 @@
     
 </script>   -->
 
-<script>
+<!-- <script>
 
   // Tipo especial de observable 
   //Subjects sempre vão ser multicasts(Estado compartilhado)
@@ -86,6 +87,65 @@
   sub.complete();
     
  
+</script>   -->
+<script>
+
+  // Operadores de criação 
+  const { of, from, interval, range, generate, fromEvent, defer } = rxjs;
+  const { take } = rxjs.operators;
+  
+  of(1, true, [1,2,3])
+  .subscribe(
+    next => console.log('of ', next),
+    err => console.error(err)
+    );
+    
+  //get struture and transform in an observable
+  // anytype iterable like a for, other observables
+  from([1,2,3])
+  .subscribe(
+    next => console.log('from ', next),
+    err => console.error(err)
+    );
+
+  //emit data in through times
+  interval(1000)
+  .pipe(
+    take(10)
+  ).subscribe(next => console.log('interval ', next))
+
+  //emission by one initial number and amount will emit
+  range(1000,10)
+  .subscribe(
+    next => console.log('range ', next),
+    err => console.error(err)
+    );
+  
+  //like a for just in function form
+  generate(0, x => x < 10, x => x + 1)
+  .subscribe(next => console.log('generate ', next))
+
+  //Event of Javascript in an observable
+  const button = document.querySelector('button');
+
+  fromEvent(button, 'click')
+  .subscribe(next => console.log('fromEvent ', next))
+
+  //Encapsulate any function, but will be execute through the moment has one subscribe
+  //always return an observable
+  const a = (a) => defer(() => {
+    return a >  10 ? of(10) : of(2);
+  })
+  a(11)
+    .subscribe(next => console.log('defer ', next))
+
+
+
+  //Create observables through functions that returns callbacks.
+  //Its possible with bindCallback and bindNodeCallback
+
+
+
 </script>  
 </body>
 </html>

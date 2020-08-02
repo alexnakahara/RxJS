@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoComplete</title>
+  <script src="https://unpkg.com/@reactivex/rxjs@6.3.3/dist/global/rxjs.umd.js"></script>
+  <style>
+    body{
+      background-color: brown;
+    }
+    .content {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    input{
+      height: 42px;
+    }
+
+    ul{
+      padding-inline-start: 0;
+      width: 175px;
+
+      list-style-type: none;
+      max-height: 45vh;
+      position: absolute;
+      overflow: auto;
+      top: 52%;
+      background-color: #fcf5ea;
+      border-radius: 3px;
+    }
+
+    li {
+      padding: 16px;
+      cursor: pointer;
+    }
+
+    li:not(:last-of-type){
+      border-bottom: solid 2px #f7bb4e;
+    }
+
+  </style>
+
+</head>
+
+<body>
+  <div class="content">
+    <input type="text" placeholder="País..."/>
+    <ul></ul>
+
+  </div>
+  
+  <script>
+    // If there's any question: open one issue in this repo
+    const {fromEvent, ajax: {ajax}, of } = rxjs;
+    const {switchMap, pluck, map, debounceTime,
+     catchError, distinctUntilChanged, startWith} = rxjs.operators;
+
+
+    const input = fromEvent(document.querySelector('input'), 'input');
+    const ul = document.querySelector('ul');
+
+    const searchCountryAPI = search => ajax(`https://restcountries.eu/rest/v2/name/${search}?fields=name`).pipe(
+    //"pluck" is a method that pick up one obj and pulled an property 
+      pluck('response'),
+      map(resp => resp.map(e => e.name))
+    )
+   
+    input.pipe( // gets all that was written
+
+      debounceTime(300), // hold on 300 miliseconds 
+
+      pluck('target',  'value'), // after 300 miliseconds, gets value from input 
+
+      map(e => e.trim()), // ignore spaces
+
+      distinctUntilChanged(), 
+
+      switchMap(search => { // when user delete a word and write another word, its unsubscribe on before request and starts other again
+        if (!search || search.length < 3) {
+          return of([]);
+        }
+
+        return searchCountryAPI(search);
+        
+      }), 
+      catchError((err, source) => { // all the time that one stream return an error its closed and stoped(ex: stream is an observable)
+      console.error('ErrOo ', source);
+        return source.pipe(// stream continues and doesn't stop
+          startWith([]) //always subscription begin, it will emmit some value, in this case it's emmit an empty array
+        ); 
+      })
+
+    ).subscribe(res => {
+        ul.innerHTML = res.map(e =>`<li>${e}</li>`).join('');
+    })
+
+
+
+  </script>
+</body>
+</html>

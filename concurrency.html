@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/@reactivex/rxjs@6.3.3/dist/global/rxjs.umd.js"></script>
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    // More about:
+    //https://medium.com/@chicagogrooves/the-4-things-you-need-to-know-about-rxjs-concurrency-91f96d02bb61
+    const { of, ajax: {ajax}, merge, concat} = rxjs;
+    const { mergeMap, pluck, concatMap, switchMap, exhaustMap, combineAll} = rxjs.operators;
+
+    const api = (resp, delay) => 
+      ajax({
+        url: `http://localhost:5200/response/${JSON.stringify(resp)}/delay/${delay}/`
+      });
+
+      const a = api({data:"A"}, 1000);
+      const b = api({data:"B"}, 1000);
+      const c = api({data:"C"}, 800);
+      const d = api({data:"D"}, 1800);
+      const e = api({data:"E"}, 1200);
+      const f = api({data:"F"}, 1600);
+      const g = api({data:"G"}, 2800);
+      const h = api({data:"H"}, 700); 
+
+      of(a, b, c, d, e, f, g, h)
+       .pipe(
+          mergeMap(e => e), // put all requests in  parallel
+         //concatMap(e => e), // exec one by one, wait the first ends for start the next. it's serial
+         //switchMap(e => e), // Cancelled the befores requests and keeped the last request. We've just "H" as response
+         //exhaustMap(e => e),  // it's the opposition of switchMap. It's ignores every new projected Observable if the previous projected Observable has not yet completed... 
+                              // ...Once that one completes,it will accept and flatten the next projected Observable and repeat this process.
+         pluck('response', 'data') ,
+         combineAll() // when the complete happens, it will pick up all and merge in an array
+       )
+       .subscribe(
+         x => console.log(x),
+         err => console.log(err),
+         () => console.log('complete')
+       );
+
+  </script>
+</body>
+</html>

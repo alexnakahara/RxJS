@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/@reactivex/rxjs@6.3.3/dist/global/rxjs.umd.js"></script>
+     <!-- Compiled and minified CSS -->
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <title>Dismiss Request</title>
+  <style>
+    body{
+      background-color: gray;
+      color: white;
+    }
+    .container{
+      display: flex;
+      justify-content: center;
+      height: 100vh;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    #content{
+      text-align: center;
+      font-size: 2.5em;
+      height: 8em;
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button id="b1" class="btn red" style="display:none">
+      Parar Request
+    </button>
+    <button id="b2" class="btn"> Fazer Request</button>
+    <div id="content"></div>
+  </div>
+
+
+  <script>
+     const { ajax: { ajax }, fromEvent, race } = rxjs;
+     const { switchMap, tap, pluck } = rxjs.operators;
+
+     
+    const api = (resp, delay) => 
+      ajax({
+        url: `http://localhost:5200/response/${JSON.stringify(resp)}/delay/${delay}/`
+      });
+
+      const content =  document.querySelector('#content');
+      const btnDismissEl =  document.querySelector('#b1');
+      const btnRequestEl =  document.querySelector('#b2');
+
+      const btnRDismissEl$ = fromEvent(btnDismissEl, 'click');
+      const btnRequestEl$ = fromEvent(btnRequestEl, 'click');
+
+      const setContent = text => content.innerHTML = text;
+
+      const request = api({data: 'Resposta da API'}, 2000).pipe(
+        pluck('response', 'data'),
+        tap(setContent)
+      );
+
+      const isRequesting = bool => {
+        // btnRequestEl.style = bool ? 'display: none' : 'display: block';
+        // btnDismissEl.style = bool ? 'display: block' : 'display: none';
+
+        // with DRY(Don't Repeat Yourself)
+        btnRequestEl.style = showElement(!bool);
+        btnDismissEl.style = showElement(bool);
+      }
+
+      const showElement = bool => bool ? 'display: block' : 'display: none';
+
+      const DismissRequest = btnRDismissEl$.pipe(
+        tap(() => setContent('Requisição cancelada!'))
+      )
+
+      btnRequestEl$.pipe(
+        tap(() => {
+          isRequesting(true);
+          setContent('Carregando...');
+        }),
+        switchMap(() => race(request, DismissRequest)),
+        tap(() => isRequesting(false))
+      ).subscribe();
+
+
+  
+  </script>
+
+  <!-- Compiled and minified JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>           
+</body>
+</html>
